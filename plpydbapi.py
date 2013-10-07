@@ -138,6 +138,9 @@ class Cursor:
 
     _SPI_OK_UTILITY = 4
     _SPI_OK_SELECT = 5
+    _SPI_OK_INSERT_RETURNING = 11
+    _SPI_OK_DELETE_RETURNING = 12
+    _SPI_OK_UPDATE_RETURNING = 13
 
     def __init__(self):
         pass
@@ -175,7 +178,8 @@ class Cursor:
         self.description = None
         self.rowcount = -1
 
-        if res.status() == self._SPI_OK_SELECT:
+        if res.status() in [self._SPI_OK_SELECT, self._SPI_OK_INSERT_RETURNING,
+                self._SPI_OK_DELETE_RETURNING, self._SPI_OK_UPDATE_RETURNING]:
             if 'colnames' in res.__class__.__dict__:
                 # Use colnames to get the order of the variables in the query
                 self._execute_result = [tuple([row[col] for col in res.colnames()]) for row in res]

@@ -106,3 +106,43 @@ class test_Plpydbapi(dbapi20.DatabaseAPI20Test):
             self.assertEqual(cur.fetchone(), (1, 'Victoria Bitter', 5,))
         finally:
             con.close()
+
+    def test_return_values_for_inserts(self):
+        con = self._connect()
+        try:
+            cur = con.cursor()
+            cur.execute('create table %sbooze '
+                    '(id integer,name varchar(20),abv integer)' % self.table_prefix)
+            cur.execute("insert into %sbooze values (1,'Victoria Bitter', 5) returning id" % (
+                self.table_prefix))
+            self.assertEqual(cur.fetchone()[0], 1)
+        finally:
+            con.close()
+
+    def test_return_values_for_updates(self):
+        con = self._connect()
+        try:
+            cur = con.cursor()
+            cur.execute('create table %sbooze '
+                    '(id integer,name varchar(20),abv integer)' % self.table_prefix)
+            cur.execute("insert into %sbooze values (1,'Victoria Bitter', 5)" % (
+                self.table_prefix))
+            cur.execute('update %sbooze set id = 2 where id = 1 returning name' % (
+                self.table_prefix))
+            self.assertEqual(cur.fetchone()[0], 'Victoria Bitter')
+        finally:
+            con.close()
+
+    def test_return_values_for_deletes(self):
+        con = self._connect()
+        try:
+            cur = con.cursor()
+            cur.execute('create table %sbooze '
+                    '(id integer,name varchar(20),abv integer)' % self.table_prefix)
+            cur.execute("insert into %sbooze values (1,'Victoria Bitter', 5)" % (
+                self.table_prefix))
+            cur.execute('delete from %sbooze where id = 1 returning name' % (
+                self.table_prefix))
+            self.assertEqual(cur.fetchone()[0], 'Victoria Bitter')
+        finally:
+            con.close()
