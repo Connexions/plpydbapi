@@ -93,6 +93,19 @@ class test_Plpydbapi(dbapi20.DatabaseAPI20Test):
         finally:
             con.close()
 
+    def test_none_variables_in_query(self):
+        con = self._connect()
+        try:
+            cur = con.cursor()
+            cur.execute('create table %sbooze '
+                    '(id integer,name varchar(20))' % self.table_prefix)
+            cur.execute("insert into %sbooze values (%%s,'Victoria Bitter')" % (
+                self.table_prefix), [None])
+            cur.execute('select * from %sbooze' % self.table_prefix)
+            self.assertEqual(cur.fetchone(), (None, 'Victoria Bitter'))
+        finally:
+            con.close()
+
     @unittest.skipUnless(is_pg92_or_newer, "columns may not return in the right order without .colnames")
     def test_return_multiple_columns(self):
         con = self._connect()
