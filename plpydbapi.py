@@ -163,10 +163,7 @@ class Cursor:
             placeholders.append("$%d" % (i + 1))
             types.append(self.py_param_to_pg_type(param))
             values.append(param)
-        if len(placeholders) == 1:
-            query = operation % placeholders[0]
-        else:
-            query = operation % placeholders
+        query = operation % tuple(placeholders)
         try:
             plan = plpy.prepare(query, types)
             res = plpy.execute(plan, values)
@@ -179,7 +176,7 @@ class Cursor:
         self.rowcount = -1
 
         if res.status() == self._SPI_OK_SELECT:
-            self._execute_result = [[row[col] for col in row] for row in res]
+            self._execute_result = [tuple([row[col] for col in row]) for row in res]
             self.rownumber = 0
             if 'colnames' in res.__class__.__dict__:
                 # PG 9.2+: use .colnames() and .coltypes() methods

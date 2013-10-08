@@ -76,3 +76,19 @@ class test_Plpydbapi(dbapi20.DatabaseAPI20Test):
             self.fail("Driver does not support long type")
         finally:
             con.close()
+
+    def test_multiple_variables_in_query(self):
+        con = self._connect()
+        try:
+            cur = con.cursor()
+            self.executeDDL1(cur)
+            cur.execute("insert into %sbooze values (%%s)" % (
+                self.table_prefix), ['Victoria Bitter'])
+            cur.execute("insert into %sbooze values (%%s)" % (
+                self.table_prefix), ["Cooper's"])
+            cur.execute('select * from %sbooze where name = %%s or name = %%s' % (
+                self.table_prefix), ['Victoria Bitter', "Cooper's"])
+            self.assertEqual(cur.fetchall(), [('Victoria Bitter',),
+                ("Cooper's",)])
+        finally:
+            con.close()
