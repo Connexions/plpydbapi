@@ -176,7 +176,11 @@ class Cursor:
         self.rowcount = -1
 
         if res.status() == self._SPI_OK_SELECT:
-            self._execute_result = [tuple([row[col] for col in row]) for row in res]
+            if 'colnames' in res.__class__.__dict__:
+                # Use colnames to get the order of the variables in the query
+                self._execute_result = [tuple([row[col] for col in res.colnames()]) for row in res]
+            else:
+                self._execute_result = [tuple([row[col] for col in row]) for row in res]
             self.rownumber = 0
             if 'colnames' in res.__class__.__dict__:
                 # PG 9.2+: use .colnames() and .coltypes() methods
