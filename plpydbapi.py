@@ -162,10 +162,17 @@ class Cursor:
         placeholders = []
         types = []
         values = []
-        for i, param in enumerate(parameters):
-            placeholders.append("$%d" % (i + 1))
-            types.append(self.py_param_to_pg_type(param))
-            values.append(param)
+        i = 0
+        for param in parameters:
+            if param is None:
+                # Directly put "None" as "NULL" in the sql
+                # as it's not possible to get the type
+                placeholders.append('NULL')
+            else:
+                i += 1
+                placeholders.append("$%d" % i)
+                types.append(self.py_param_to_pg_type(param))
+                values.append(param)
         query = operation % tuple(placeholders)
         try:
             plan = plpy.prepare(query, types)
