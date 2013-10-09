@@ -159,3 +159,13 @@ class test_Plpydbapi(dbapi20.DatabaseAPI20Test):
             self.assertEqual(cur.fetchone()[0], 'Victoria Bitter')
         finally:
             con.close()
+
+    def test_with(self):
+        with self._connect() as con:
+            with con.cursor() as cur:
+                self.executeDDL1(cur)
+                cur.execute("insert into %sbooze values ('Victoria Bitter')" % (
+                    self.table_prefix))
+                cur.execute('select * from %sbooze' % self.table_prefix)
+                self.assertEqual(cur.fetchall(), [('Victoria Bitter',)])
+        self.assertRaises(self.driver.Error, con.commit)
