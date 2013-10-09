@@ -122,6 +122,12 @@ class Connection:
         newcursor.connection = self
         return newcursor
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
+
 
 ## Cursor Objects
 
@@ -285,6 +291,12 @@ class Cursor:
 
     def __iter__(self):
         return self
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
 
 
 ## Type Objects and Constructors
