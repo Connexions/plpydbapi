@@ -28,6 +28,28 @@ if sys.version[0] == '3':
     StandardError = Exception
 
 
+byte_types = []
+try:
+    # in python2 bytes and str are aliases
+    if bytes != str:
+        byte_types.append(bytes)
+except NameError:
+    pass
+try:
+    byte_types.append(memoryview)
+except NameError:
+    pass
+try:
+    byte_types.append(buffer)
+except NameError:
+    pass
+try:
+    byte_types.append(bytearray)
+except NameError:
+    pass
+byte_types = tuple(byte_types)
+
+
 class Warning(StandardError):
     pass
 
@@ -178,7 +200,10 @@ class Cursor:
                 i += 1
                 placeholders.append("$%d" % i)
                 types.append(self.py_param_to_pg_type(param))
-                values.append(param)
+                if types[-1] == 'bytea' and hasattr(param, 'tobytes'):
+                    values.append(param.tobytes())
+                else:
+                    values.append(param)
         query = operation % tuple(placeholders)
         try:
             plan = plpy.prepare(query, types)
@@ -226,6 +251,8 @@ class Cursor:
             pgtype = 'int'
         elif isinstance(param, int):
             pgtype = 'int'
+        elif isinstance(param, byte_types):
+            pgtype = 'bytea'
         else:
             pgtype = 'text'
         # TODO ...

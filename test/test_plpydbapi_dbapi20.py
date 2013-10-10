@@ -169,3 +169,49 @@ class test_Plpydbapi(dbapi20.DatabaseAPI20Test):
                 cur.execute('select * from %sbooze' % self.table_prefix)
                 self.assertEqual(cur.fetchall(), [('Victoria Bitter',)])
         self.assertRaises(self.driver.Error, con.commit)
+
+    @unittest.skipUnless(sys.version[0] == '2', 'buffer in python2 accepts a string')
+    def test_insert_bytea_fields_python2(self):
+        con = self._connect()
+        try:
+            cur = con.cursor()
+            cur.execute('create table %sbooze (file bytea)' % self.table_prefix)
+            cur.execute('insert into %sbooze values (%%s)' % self.table_prefix,
+                    [buffer('Victoria Bitter')])
+            cur.execute('insert into %sbooze values (%%s)' % self.table_prefix,
+                    [bytearray("Cooper's")])
+            cur.execute('select * from %sbooze order by file' % self.table_prefix)
+            self.assertEqual(cur.fetchall(), [("Cooper's",), ('Victoria Bitter',)])
+        finally:
+            con.close()
+
+    @unittest.skipUnless(sys.version[0:3] == '2.7', 'memoryview in python2 accepts a string')
+    def test_insert_bytea_fields_python27(self):
+        con = self._connect()
+        try:
+            cur = con.cursor()
+            cur.execute('create table %sbooze (file bytea)' % self.table_prefix)
+            cur.execute('insert into %sbooze values (%%s)' % self.table_prefix,
+                    [memoryview('Victoria Bitter')])
+            cur.execute('select * from %sbooze' % self.table_prefix)
+            self.assertEqual(cur.fetchall(), [('Victoria Bitter',)])
+        finally:
+            con.close()
+
+    @unittest.skipUnless(sys.version[0] == '3', 'python3 requires bytes instead of string')
+    def test_insert_bytea_fields_python3(self):
+        con = self._connect()
+        try:
+            cur = con.cursor()
+            cur.execute('create table %sbooze (file bytea)' % self.table_prefix)
+            cur.execute('insert into %sbooze values (%%s)' % self.table_prefix,
+                    [bytes(b'Victoria Bitter')])
+            cur.execute('insert into %sbooze values (%%s)' % self.table_prefix,
+                    [memoryview(b"Cooper's")])
+            cur.execute('insert into %sbooze values (%%s)' % self.table_prefix,
+                    [bytearray(b"Boag's")])
+            cur.execute('select * from %sbooze order by file' % self.table_prefix)
+            self.assertEqual(cur.fetchall(), [(b"Boag's",), (b"Cooper's",),
+                (b'Victoria Bitter',)])
+        finally:
+            con.close()
