@@ -59,6 +59,9 @@ class Error(StandardError):
         super(Error, self).__init__()
         self.spierror = spierror
 
+    def __str__(self):
+        return str(self.spierror)
+
 
 class InterfaceError(Error):
     pass
