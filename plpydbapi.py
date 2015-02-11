@@ -256,6 +256,9 @@ class Cursor:
             pgtype = 'int'
         elif isinstance(param, byte_types):
             pgtype = 'bytea'
+        elif isinstance(param, list):
+            # TODO Check for the usage of 'int[]' if all values are int.
+            pgtype = 'text[]'
         else:
             pgtype = 'text'
         # TODO ...
